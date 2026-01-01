@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +12,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SocialAuth } from "@/components/auth/social-auth";
+import { register } from "@/actions/register";
+import { useRouter } from "next/navigation";
 
-export default function SignUpPage() {
+export default function SignupPage() {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    startTransition(() => {
+      register(formData).then((data) => {
+        setError(data.error);
+        setSuccess(data.success);
+        if (data.success) {
+          setTimeout(() => router.push("/auth/login"), 2000);
+        }
+      });
+    });
+  };
+
   return (
-    <Card className="border-border/50 bg-card/60 backdrop-blur-md">
+    <Card className="border-border/50 bg-card/60 backdrop-blur-md w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">
           Create an account
@@ -24,46 +53,51 @@ export default function SignUpPage() {
           Enter your email below to create your account
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        <SocialAuth />
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border/50" />
+      <CardContent>
+        <form onSubmit={onSubmit} className="grid gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="name">Name</label>
+            <Input
+              id="name"
+              placeholder="John Doe"
+              disabled={isPending}
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
+          <div className="grid gap-2">
+            <label htmlFor="email">Email</label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              disabled={isPending}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
           </div>
-        </div>
-        <div className="grid gap-2">
-          <label
-            htmlFor="email"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Email
-          </label>
-          <Input id="email" type="email" placeholder="m@example.com" />
-        </div>
-        <div className="grid gap-2">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Password
-          </label>
-          <Input id="password" type="password" />
-        </div>
-        <div className="grid gap-2">
-          <label
-            htmlFor="confirm-password"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Confirm Password
-          </label>
-          <Input id="confirm-password" type="password" />
-        </div>
-        <Button className="w-full">Create Account</Button>
+          <div className="grid gap-2">
+            <label htmlFor="password">Password</label>
+            <Input
+              id="password"
+              type="password"
+              disabled={isPending}
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
+          </div>
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {success && <div className="text-green-500 text-sm">{success}</div>}
+          <Button className="w-full" type="submit" disabled={isPending}>
+            Create account
+          </Button>
+        </form>
       </CardContent>
       <CardFooter>
         <div className="text-sm text-center text-muted-foreground w-full">
