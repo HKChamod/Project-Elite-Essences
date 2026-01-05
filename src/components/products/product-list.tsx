@@ -12,12 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@prisma/client";
+import { useCart } from "@/store/use-cart";
 
 interface ProductListProps {
   initialProducts: Product[];
 }
 
 export function ProductList({ initialProducts }: ProductListProps) {
+  const cart = useCart();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -74,11 +76,20 @@ export function ProductList({ initialProducts }: ProductListProps) {
             className="hover:border-primary/50 transition-colors"
           >
             <div className="h-64 bg-secondary/50 rounded-t-lg flex items-center justify-center relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 to-background z-0" />
-              <div className="z-10 text-4xl opacity-50 group-hover:opacity-100 transition-opacity transform group-hover:scale-110 duration-500">
-                {/* Placeholder visualization */}
-                🧪
-              </div>
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover transition-transform transform group-hover:scale-110 duration-500"
+                />
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-br from-secondary/80 to-background z-0" />
+                  <div className="z-10 text-4xl opacity-50 group-hover:opacity-100 transition-opacity transform group-hover:scale-110 duration-500">
+                    🧪
+                  </div>
+                </>
+              )}
             </div>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -88,16 +99,32 @@ export function ProductList({ initialProducts }: ProductListProps) {
                     {product.category}
                   </p>
                 </div>
-                <span className="text-accent font-bold">${product.price}</span>
+                <span className="text-accent font-bold">
+                  ${product.price.toFixed(2)}
+                </span>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground line-clamp-2">
                 {product.description}
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Add to Cart</Button>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  cart.addItem({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.image || "",
+                    quantity: 1,
+                    category: product.category || undefined,
+                  });
+                }}
+              >
+                Add to Cart
+              </Button>
             </CardFooter>
           </Card>
         ))}
