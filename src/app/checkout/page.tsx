@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
+import { createOrder } from "@/actions/order";
 
 export default function CheckoutPage() {
   const cart = useCart();
@@ -33,17 +34,50 @@ export default function CheckoutPage() {
   const shipping = 10.0;
   const total = subtotal + shipping;
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    const formData = new FormData(e.target as HTMLFormElement);
+    const shippingDetails = {
+      firstName:
+        (formData.get("firstName") as string) ||
+        (document.getElementById("firstName") as HTMLInputElement).value,
+      lastName:
+        (formData.get("lastName") as string) ||
+        (document.getElementById("lastName") as HTMLInputElement).value,
+      email:
+        (formData.get("email") as string) ||
+        (document.getElementById("email") as HTMLInputElement).value,
+      address:
+        (formData.get("address") as string) ||
+        (document.getElementById("address") as HTMLInputElement).value,
+      city:
+        (formData.get("city") as string) ||
+        (document.getElementById("city") as HTMLInputElement).value,
+      zipCode:
+        (formData.get("zip") as string) ||
+        (document.getElementById("zip") as HTMLInputElement).value,
+    };
+
+    const result = await createOrder({
+      items: cart.items.map((i) => ({
+        id: i.id as unknown as number,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      shippingDetails,
+    });
+
+    if (result.success) {
       cart.clearCart();
-      setIsProcessing(false);
-      alert("Order placed successfully! (This is a demo)");
-      router.push("/");
-    }, 2000);
+      alert("Order placed successfully!");
+      router.push("/orders");
+    } else {
+      alert(result.error);
+    }
+
+    setIsProcessing(false);
   };
 
   if (!isMounted) return null;
