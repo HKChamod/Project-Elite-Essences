@@ -23,7 +23,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <body className={inter.className + " min-h-screen flex flex-col"}>
+      <body
+        className={inter.className + " min-h-screen flex flex-col"}
+        suppressHydrationWarning
+      >
         <Navbar session={session} />
         <main className="flex-1">{children}</main>
         <Footer />
